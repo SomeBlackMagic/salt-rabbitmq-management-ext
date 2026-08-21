@@ -16,5 +16,6 @@ _____________
     rabbitmq_management_permission_mod
     rabbitmq_management_policy_mod
     rabbitmq_management_queue_mod
+    rabbitmq_management_shovel_mod
     rabbitmq_management_user_mod
     rabbitmq_management_vhost_mod
