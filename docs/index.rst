@@ -9,6 +9,7 @@ Salt Extension for interacting with Rabbitmq Management
   :hidden:
 
   topics/installation
+  topics/vhosts
   topics/bindings
 
 .. toctree::

@@ -14,3 +14,4 @@ _____________
     rabbitmq_management_mod
     rabbitmq_management_queue_mod
     rabbitmq_management_user_mod
+    rabbitmq_management_vhost_mod

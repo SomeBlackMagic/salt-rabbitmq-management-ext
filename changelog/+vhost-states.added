@@ -1,0 +1,1 @@
+Add idempotent states for creating, updating, and removing RabbitMQ virtual hosts, with support for description, tags, default queue type, and tracing configuration.
