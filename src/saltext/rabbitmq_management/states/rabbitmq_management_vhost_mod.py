@@ -11,6 +11,10 @@ _REQUIRED_FUNCTIONS = (
     "rabbitmq_management.vhost_delete",
     "rabbitmq_management.vhost_exist",
     "rabbitmq_management.vhost_get",
+    "rabbitmq_management.vhost_limit_get",
+    "rabbitmq_management.vhost_limit_set",
+    "rabbitmq_management.vhost_limit_delete",
+    "rabbitmq_management.vhost_limit_exist",
 )
 
 
@@ -185,6 +189,139 @@ def vhost_present(
         ret["comment"] = f"Vhost '{name}' created"
         ret["changes"] = {"old": None, "new": {"name": name, **desired}}
 
+    return ret
+
+
+def vhost_limit_present(name, limit_type, value, **connection_args):
+    """
+    Ensure a RabbitMQ virtual host limit is set to the desired value.
+
+    Args:
+        name: Virtual host name
+        limit_type: Limit type (max-connections or max-queues)
+        value: Limit value (-1 for unlimited)
+        **connection_args: Optional connection parameter overrides
+
+    Example:
+
+    .. code-block:: yaml
+
+        production_vhost_connections:
+          rabbitmq_management.vhost_limit_present:
+            - name: /production
+            - limit_type: max-connections
+            - value: 1000
+
+        production_vhost_queues:
+          rabbitmq_management.vhost_limit_present:
+            - name: /production
+            - limit_type: max-queues
+            - value: 500
+    """
+    ret = _state_return(name)
+
+    try:
+        current = __salt__["rabbitmq_management.vhost_limit_get"](
+            name, limit_type, **connection_args
+        )
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to get limit '%s' for vhost %s", limit_type, name)
+        ret["result"] = False
+        ret["comment"] = f"Failed to get limit '{limit_type}' for vhost '{name}': {err}"
+        return ret
+
+    if current is None:
+        ret["changes"] = {"old": None, "new": {"limit_type": limit_type, "value": value}}
+        if __opts__.get("test", False):
+            ret["result"] = None
+            ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' would be set"
+            return ret
+        try:
+            __salt__["rabbitmq_management.vhost_limit_set"](
+                name, limit_type, value, **connection_args
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            log.exception("Failed to set limit '%s' for vhost %s", limit_type, name)
+            ret["result"] = False
+            ret["changes"] = {}
+            ret["comment"] = f"Failed to set limit '{limit_type}' for vhost '{name}': {err}"
+            return ret
+        ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' set"
+        return ret
+
+    if current["value"] == value:
+        ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' is already in the desired state"
+        return ret
+
+    ret["changes"] = {"old": {"value": current["value"]}, "new": {"value": value}}
+    if __opts__.get("test", False):
+        ret["result"] = None
+        ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' would be updated"
+        return ret
+
+    try:
+        __salt__["rabbitmq_management.vhost_limit_set"](name, limit_type, value, **connection_args)
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to update limit '%s' for vhost %s", limit_type, name)
+        ret["result"] = False
+        ret["changes"] = {}
+        ret["comment"] = f"Failed to update limit '{limit_type}' for vhost '{name}': {err}"
+        return ret
+
+    ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' updated"
+    return ret
+
+
+def vhost_limit_absent(name, limit_type, **connection_args):
+    """
+    Ensure a RabbitMQ virtual host limit is not set.
+
+    Args:
+        name: Virtual host name
+        limit_type: Limit type (max-connections or max-queues)
+        **connection_args: Optional connection parameter overrides
+
+    Example:
+
+    .. code-block:: yaml
+
+        remove_connection_limit:
+          rabbitmq_management.vhost_limit_absent:
+            - name: /staging
+            - limit_type: max-connections
+    """
+    ret = _state_return(name)
+
+    try:
+        current = __salt__["rabbitmq_management.vhost_limit_get"](
+            name, limit_type, **connection_args
+        )
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to get limit '%s' for vhost %s", limit_type, name)
+        ret["result"] = False
+        ret["comment"] = f"Failed to get limit '{limit_type}' for vhost '{name}': {err}"
+        return ret
+
+    if current is None:
+        ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' is already absent"
+        return ret
+
+    ret["changes"] = {"old": {"limit_type": limit_type, "value": current["value"]}, "new": None}
+    if __opts__.get("test", False):
+        ret["result"] = None
+        ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' would be removed"
+        return ret
+
+    try:
+        __salt__["rabbitmq_management.vhost_limit_delete"](name, limit_type, **connection_args)
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to remove limit '%s' for vhost %s", limit_type, name)
+        ret["result"] = False
+        ret["changes"] = {}
+        ret["comment"] = f"Failed to remove limit '{limit_type}' for vhost '{name}': {err}"
+        return ret
+
+    ret["comment"] = f"Limit '{limit_type}' for vhost '{name}' removed"
     return ret
 
 

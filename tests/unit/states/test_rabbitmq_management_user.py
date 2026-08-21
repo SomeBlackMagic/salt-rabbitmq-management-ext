@@ -13,6 +13,10 @@ def salt_functions(monkeypatch):
         "rabbitmq_management.user_delete": Mock(return_value={"status": "deleted"}),
         "rabbitmq_management.user_exist": Mock(return_value=False),
         "rabbitmq_management.user_get": Mock(return_value=None),
+        "rabbitmq_management.user_limit_get": Mock(return_value=None),
+        "rabbitmq_management.user_limit_set": Mock(return_value=True),
+        "rabbitmq_management.user_limit_delete": Mock(return_value=True),
+        "rabbitmq_management.user_limit_exist": Mock(return_value=False),
     }
     monkeypatch.setattr(state, "__salt__", functions, raising=False)
     monkeypatch.setattr(state, "__opts__", {"test": False}, raising=False)
@@ -371,3 +375,125 @@ def test_user_absent_reports_existence_check_failure(salt_functions):
     assert not ret["changes"]
     assert ret["comment"] == "Failed to check user existence: API unavailable"
     salt_functions["rabbitmq_management.user_delete"].assert_not_called()
+
+
+def test_user_limit_present_sets_new_limit(salt_functions):
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = None
+
+    ret = state.user_limit_present("myapp", limit_type="max-channels", value=100)
+
+    assert ret == {
+        "name": "myapp",
+        "result": True,
+        "changes": {"old": None, "new": {"limit_type": "max-channels", "value": 100}},
+        "comment": "Limit 'max-channels' for user 'myapp' set",
+    }
+    salt_functions["rabbitmq_management.user_limit_set"].assert_called_once_with(
+        "myapp", "max-channels", 100
+    )
+
+
+def test_user_limit_present_no_changes_when_value_matches(salt_functions):
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = {
+        "user": "myapp",
+        "name": "max-channels",
+        "value": 100,
+    }
+
+    ret = state.user_limit_present("myapp", limit_type="max-channels", value=100)
+
+    assert ret == {
+        "name": "myapp",
+        "result": True,
+        "changes": {},
+        "comment": "Limit 'max-channels' for user 'myapp' is already in the desired state",
+    }
+    salt_functions["rabbitmq_management.user_limit_set"].assert_not_called()
+
+
+def test_user_limit_present_updates_changed_value(salt_functions):
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = {
+        "user": "myapp",
+        "name": "max-channels",
+        "value": 50,
+    }
+
+    ret = state.user_limit_present("myapp", limit_type="max-channels", value=100)
+
+    assert ret == {
+        "name": "myapp",
+        "result": True,
+        "changes": {"old": {"value": 50}, "new": {"value": 100}},
+        "comment": "Limit 'max-channels' for user 'myapp' updated",
+    }
+    salt_functions["rabbitmq_management.user_limit_set"].assert_called_once_with(
+        "myapp", "max-channels", 100
+    )
+
+
+def test_user_limit_present_test_mode(salt_functions, monkeypatch):
+    monkeypatch.setattr(state, "__opts__", {"test": True})
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = None
+
+    ret = state.user_limit_present("myapp", limit_type="max-channels", value=100)
+
+    assert ret == {
+        "name": "myapp",
+        "result": None,
+        "changes": {"old": None, "new": {"limit_type": "max-channels", "value": 100}},
+        "comment": "Limit 'max-channels' for user 'myapp' would be set",
+    }
+    salt_functions["rabbitmq_management.user_limit_set"].assert_not_called()
+
+
+def test_user_limit_absent_removes_limit(salt_functions):
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = {
+        "user": "myapp",
+        "name": "max-channels",
+        "value": 100,
+    }
+
+    ret = state.user_limit_absent("myapp", limit_type="max-channels")
+
+    assert ret == {
+        "name": "myapp",
+        "result": True,
+        "changes": {"old": {"limit_type": "max-channels", "value": 100}, "new": None},
+        "comment": "Limit 'max-channels' for user 'myapp' removed",
+    }
+    salt_functions["rabbitmq_management.user_limit_delete"].assert_called_once_with(
+        "myapp", "max-channels"
+    )
+
+
+def test_user_limit_absent_already_absent(salt_functions):
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = None
+
+    ret = state.user_limit_absent("myapp", limit_type="max-channels")
+
+    assert ret == {
+        "name": "myapp",
+        "result": True,
+        "changes": {},
+        "comment": "Limit 'max-channels' for user 'myapp' is already absent",
+    }
+    salt_functions["rabbitmq_management.user_limit_delete"].assert_not_called()
+
+
+def test_user_limit_absent_test_mode(salt_functions, monkeypatch):
+    monkeypatch.setattr(state, "__opts__", {"test": True})
+    salt_functions["rabbitmq_management.user_limit_get"].return_value = {
+        "user": "myapp",
+        "name": "max-channels",
+        "value": 100,
+    }
+
+    ret = state.user_limit_absent("myapp", limit_type="max-channels")
+
+    assert ret == {
+        "name": "myapp",
+        "result": None,
+        "changes": {"old": {"limit_type": "max-channels", "value": 100}, "new": None},
+        "comment": "Limit 'max-channels' for user 'myapp' would be removed",
+    }
+    salt_functions["rabbitmq_management.user_limit_delete"].assert_not_called()

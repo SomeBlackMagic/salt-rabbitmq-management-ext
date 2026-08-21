@@ -122,6 +122,57 @@ When a change is required, the state returns `result: null` and describes the
 predicted change in `changes`. If the desired state is already satisfied, it
 returns `result: true` with an empty `changes` mapping.
 
+## Managing virtual host limits
+
+Use `vhost_limit_present` to enforce a limit on a virtual host and
+`vhost_limit_absent` to remove one.
+
+Supported limit types:
+
+- `max-connections` — maximum number of concurrent connections
+- `max-queues` — maximum number of queues
+
+### Setting a limit
+
+```yaml
+production_vhost_connections:
+  rabbitmq_management.vhost_limit_present:
+    - name: /production
+    - limit_type: max-connections
+    - value: 1000
+
+production_vhost_queues:
+  rabbitmq_management.vhost_limit_present:
+    - name: /production
+    - limit_type: max-queues
+    - value: 500
+```
+
+The state is idempotent: if the limit is already set to the requested value,
+no change is made. If the limit exists with a different value, it is updated.
+
+Use `-1` to allow unlimited connections or queues while still managing the
+limit through Salt:
+
+```yaml
+unlimited_connections:
+  rabbitmq_management.vhost_limit_present:
+    - name: /development
+    - limit_type: max-connections
+    - value: -1
+```
+
+### Removing a limit
+
+```yaml
+remove_connection_limit:
+  rabbitmq_management.vhost_limit_absent:
+    - name: /staging
+    - limit_type: max-connections
+```
+
+The state succeeds without changes when the limit is already absent.
+
 ## State parameters
 
 ### `vhost_present`
@@ -139,6 +190,21 @@ returns `result: true` with an empty `changes` mapping.
 | Parameter | Required | Default | Description |
 | --- | --- | --- | --- |
 | `name` | yes | — | Virtual host name to remove. |
+
+### `vhost_limit_present`
+
+| Parameter | Required | Default | Description |
+| --- | --- | --- | --- |
+| `name` | yes | — | Virtual host name. |
+| `limit_type` | yes | — | Limit type: `max-connections` or `max-queues`. |
+| `value` | yes | — | Limit value. Use `-1` for unlimited. |
+
+### `vhost_limit_absent`
+
+| Parameter | Required | Default | Description |
+| --- | --- | --- | --- |
+| `name` | yes | — | Virtual host name. |
+| `limit_type` | yes | — | Limit type to remove: `max-connections` or `max-queues`. |
 
 Additional keyword arguments are treated as Management API connection
 overrides and are passed to every execution-module call made by the state.

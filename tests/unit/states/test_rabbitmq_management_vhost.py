@@ -12,6 +12,10 @@ def salt_functions(monkeypatch):
         "rabbitmq_management.vhost_get": Mock(),
         "rabbitmq_management.vhost_create": Mock(return_value={"status": "created"}),
         "rabbitmq_management.vhost_delete": Mock(return_value={"status": "deleted"}),
+        "rabbitmq_management.vhost_limit_get": Mock(return_value=None),
+        "rabbitmq_management.vhost_limit_set": Mock(return_value=True),
+        "rabbitmq_management.vhost_limit_delete": Mock(return_value=True),
+        "rabbitmq_management.vhost_limit_exist": Mock(return_value=False),
     }
     monkeypatch.setattr(state, "__salt__", functions, raising=False)
     monkeypatch.setattr(state, "__opts__", {"test": False}, raising=False)
@@ -159,3 +163,125 @@ def test_vhost_absent_removes_existing_vhost(salt_functions):
     assert ret["result"] is True
     assert ret["changes"] == {"old": "/old", "new": None}
     salt_functions["rabbitmq_management.vhost_delete"].assert_called_once_with("/old", timeout=10)
+
+
+def test_vhost_limit_present_sets_new_limit(salt_functions):
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = None
+
+    ret = state.vhost_limit_present("/production", limit_type="max-connections", value=1000)
+
+    assert ret == {
+        "name": "/production",
+        "result": True,
+        "changes": {"old": None, "new": {"limit_type": "max-connections", "value": 1000}},
+        "comment": "Limit 'max-connections' for vhost '/production' set",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_set"].assert_called_once_with(
+        "/production", "max-connections", 1000
+    )
+
+
+def test_vhost_limit_present_no_changes_when_value_matches(salt_functions):
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = {
+        "vhost": "/production",
+        "name": "max-connections",
+        "value": 1000,
+    }
+
+    ret = state.vhost_limit_present("/production", limit_type="max-connections", value=1000)
+
+    assert ret == {
+        "name": "/production",
+        "result": True,
+        "changes": {},
+        "comment": "Limit 'max-connections' for vhost '/production' is already in the desired state",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_set"].assert_not_called()
+
+
+def test_vhost_limit_present_updates_changed_value(salt_functions):
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = {
+        "vhost": "/production",
+        "name": "max-connections",
+        "value": 500,
+    }
+
+    ret = state.vhost_limit_present("/production", limit_type="max-connections", value=1000)
+
+    assert ret == {
+        "name": "/production",
+        "result": True,
+        "changes": {"old": {"value": 500}, "new": {"value": 1000}},
+        "comment": "Limit 'max-connections' for vhost '/production' updated",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_set"].assert_called_once_with(
+        "/production", "max-connections", 1000
+    )
+
+
+def test_vhost_limit_present_test_mode(salt_functions, monkeypatch):
+    monkeypatch.setattr(state, "__opts__", {"test": True})
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = None
+
+    ret = state.vhost_limit_present("/production", limit_type="max-connections", value=1000)
+
+    assert ret == {
+        "name": "/production",
+        "result": None,
+        "changes": {"old": None, "new": {"limit_type": "max-connections", "value": 1000}},
+        "comment": "Limit 'max-connections' for vhost '/production' would be set",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_set"].assert_not_called()
+
+
+def test_vhost_limit_absent_removes_limit(salt_functions):
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = {
+        "vhost": "/production",
+        "name": "max-connections",
+        "value": 1000,
+    }
+
+    ret = state.vhost_limit_absent("/production", limit_type="max-connections")
+
+    assert ret == {
+        "name": "/production",
+        "result": True,
+        "changes": {"old": {"limit_type": "max-connections", "value": 1000}, "new": None},
+        "comment": "Limit 'max-connections' for vhost '/production' removed",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_delete"].assert_called_once_with(
+        "/production", "max-connections"
+    )
+
+
+def test_vhost_limit_absent_already_absent(salt_functions):
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = None
+
+    ret = state.vhost_limit_absent("/production", limit_type="max-connections")
+
+    assert ret == {
+        "name": "/production",
+        "result": True,
+        "changes": {},
+        "comment": "Limit 'max-connections' for vhost '/production' is already absent",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_delete"].assert_not_called()
+
+
+def test_vhost_limit_absent_test_mode(salt_functions, monkeypatch):
+    monkeypatch.setattr(state, "__opts__", {"test": True})
+    salt_functions["rabbitmq_management.vhost_limit_get"].return_value = {
+        "vhost": "/production",
+        "name": "max-connections",
+        "value": 1000,
+    }
+
+    ret = state.vhost_limit_absent("/production", limit_type="max-connections")
+
+    assert ret == {
+        "name": "/production",
+        "result": None,
+        "changes": {"old": {"limit_type": "max-connections", "value": 1000}, "new": None},
+        "comment": "Limit 'max-connections' for vhost '/production' would be removed",
+    }
+    salt_functions["rabbitmq_management.vhost_limit_delete"].assert_not_called()

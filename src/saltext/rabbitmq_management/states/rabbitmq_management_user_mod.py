@@ -13,6 +13,10 @@ _REQUIRED_FUNCTIONS = (
     "rabbitmq_management.user_delete",
     "rabbitmq_management.user_exist",
     "rabbitmq_management.user_get",
+    "rabbitmq_management.user_limit_get",
+    "rabbitmq_management.user_limit_set",
+    "rabbitmq_management.user_limit_delete",
+    "rabbitmq_management.user_limit_exist",
 )
 
 
@@ -186,6 +190,133 @@ def user_present(
         ret["comment"] = f"User '{name}' updated"
     else:
         ret["comment"] = f"User '{name}' created"
+    return ret
+
+
+def user_limit_present(name, limit_type, value, **connection_args):
+    """
+    Ensure a RabbitMQ user limit is set to the desired value.
+
+    Args:
+        name: RabbitMQ user name
+        limit_type: Limit type (max-connections or max-channels)
+        value: Limit value (-1 for unlimited)
+        **connection_args: Optional connection parameter overrides
+
+    Example:
+
+    .. code-block:: yaml
+
+        app_user_channels:
+          rabbitmq_management.user_limit_present:
+            - name: myapp
+            - limit_type: max-channels
+            - value: 100
+    """
+    ret = _state_return(name)
+
+    try:
+        current = __salt__["rabbitmq_management.user_limit_get"](
+            name, limit_type, **connection_args
+        )
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to get limit '%s' for user %s", limit_type, name)
+        ret["result"] = False
+        ret["comment"] = f"Failed to get limit '{limit_type}' for user '{name}': {err}"
+        return ret
+
+    if current is None:
+        ret["changes"] = {"old": None, "new": {"limit_type": limit_type, "value": value}}
+        if __opts__.get("test", False):
+            ret["result"] = None
+            ret["comment"] = f"Limit '{limit_type}' for user '{name}' would be set"
+            return ret
+        try:
+            __salt__["rabbitmq_management.user_limit_set"](
+                name, limit_type, value, **connection_args
+            )
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            log.exception("Failed to set limit '%s' for user %s", limit_type, name)
+            ret["result"] = False
+            ret["changes"] = {}
+            ret["comment"] = f"Failed to set limit '{limit_type}' for user '{name}': {err}"
+            return ret
+        ret["comment"] = f"Limit '{limit_type}' for user '{name}' set"
+        return ret
+
+    if current["value"] == value:
+        ret["comment"] = f"Limit '{limit_type}' for user '{name}' is already in the desired state"
+        return ret
+
+    ret["changes"] = {"old": {"value": current["value"]}, "new": {"value": value}}
+    if __opts__.get("test", False):
+        ret["result"] = None
+        ret["comment"] = f"Limit '{limit_type}' for user '{name}' would be updated"
+        return ret
+
+    try:
+        __salt__["rabbitmq_management.user_limit_set"](name, limit_type, value, **connection_args)
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to update limit '%s' for user %s", limit_type, name)
+        ret["result"] = False
+        ret["changes"] = {}
+        ret["comment"] = f"Failed to update limit '{limit_type}' for user '{name}': {err}"
+        return ret
+
+    ret["comment"] = f"Limit '{limit_type}' for user '{name}' updated"
+    return ret
+
+
+def user_limit_absent(name, limit_type, **connection_args):
+    """
+    Ensure a RabbitMQ user limit is not set.
+
+    Args:
+        name: RabbitMQ user name
+        limit_type: Limit type (max-connections or max-channels)
+        **connection_args: Optional connection parameter overrides
+
+    Example:
+
+    .. code-block:: yaml
+
+        remove_user_limit:
+          rabbitmq_management.user_limit_absent:
+            - name: myapp
+            - limit_type: max-channels
+    """
+    ret = _state_return(name)
+
+    try:
+        current = __salt__["rabbitmq_management.user_limit_get"](
+            name, limit_type, **connection_args
+        )
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to get limit '%s' for user %s", limit_type, name)
+        ret["result"] = False
+        ret["comment"] = f"Failed to get limit '{limit_type}' for user '{name}': {err}"
+        return ret
+
+    if current is None:
+        ret["comment"] = f"Limit '{limit_type}' for user '{name}' is already absent"
+        return ret
+
+    ret["changes"] = {"old": {"limit_type": limit_type, "value": current["value"]}, "new": None}
+    if __opts__.get("test", False):
+        ret["result"] = None
+        ret["comment"] = f"Limit '{limit_type}' for user '{name}' would be removed"
+        return ret
+
+    try:
+        __salt__["rabbitmq_management.user_limit_delete"](name, limit_type, **connection_args)
+    except Exception as err:  # pylint: disable=broad-exception-caught
+        log.exception("Failed to remove limit '%s' for user %s", limit_type, name)
+        ret["result"] = False
+        ret["changes"] = {}
+        ret["comment"] = f"Failed to remove limit '{limit_type}' for user '{name}': {err}"
+        return ret
+
+    ret["comment"] = f"Limit '{limit_type}' for user '{name}' removed"
     return ret
 
 

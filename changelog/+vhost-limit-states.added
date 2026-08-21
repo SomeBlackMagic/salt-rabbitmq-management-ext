@@ -1,0 +1,1 @@
+Add idempotent states for setting and removing RabbitMQ virtual host limits (max-connections, max-queues) via ``vhost_limit_present`` and ``vhost_limit_absent``.
