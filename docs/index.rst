@@ -13,6 +13,7 @@ Salt Extension for interacting with Rabbitmq Management
   topics/users
   topics/bindings
   topics/parameters
+  topics/policies
 
 .. toctree::
   :maxdepth: 2
