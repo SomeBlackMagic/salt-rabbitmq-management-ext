@@ -23,3 +23,8 @@ def test_vhost_states_are_available(rabbitmq_management):
 def test_binding_states_are_merged_into_shared_namespace(rabbitmq_management):
     assert callable(rabbitmq_management.binding_present)
     assert callable(rabbitmq_management.binding_absent)
+
+
+def test_user_states_are_merged_into_shared_namespace(rabbitmq_management):
+    assert callable(rabbitmq_management.user_present)
+    assert callable(rabbitmq_management.user_absent)

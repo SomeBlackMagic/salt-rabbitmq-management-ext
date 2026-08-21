@@ -11,3 +11,4 @@ _____________
 
     rabbitmq_management_binding_mod
     rabbitmq_management_mod
+    rabbitmq_management_user_mod
