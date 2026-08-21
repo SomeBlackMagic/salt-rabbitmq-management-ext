@@ -1,0 +1,1 @@
+Add idempotent states for creating, updating, and removing RabbitMQ federation upstreams, with support for all upstream parameters including URI lists, TTL, prefetch count, ack mode, and reconnect delay.

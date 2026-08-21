@@ -11,7 +11,7 @@ _____________
 
     rabbitmq_management_binding_mod
     rabbitmq_management_exchange_mod
-    rabbitmq_management_mod
+    rabbitmq_management_federation_mod
     rabbitmq_management_queue_mod
     rabbitmq_management_user_mod
     rabbitmq_management_vhost_mod

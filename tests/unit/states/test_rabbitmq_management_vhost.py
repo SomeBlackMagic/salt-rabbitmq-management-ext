@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import saltext.rabbitmq_management.states.rabbitmq_management_mod as state
+import saltext.rabbitmq_management.states.rabbitmq_management_vhost_mod as state
 
 
 @pytest.fixture
