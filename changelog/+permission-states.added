@@ -1,0 +1,1 @@
+Add idempotent states for setting and removing RabbitMQ user permissions on virtual hosts, including configure, write, and read regex fields and Salt test-mode support.
