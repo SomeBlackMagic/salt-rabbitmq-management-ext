@@ -178,8 +178,11 @@ def exchange_exist(vhost, name, **config_override):
     Returns:
         bool: True if exchange exists, False otherwise
     """
-    result = exchange_get(vhost, name, **config_override)
-    return result is not None
+    try:
+        result = exchange_get(vhost, name, **config_override)
+        return result is not None
+    except CommandExecutionError:
+        return False
 
 
 def exchange_bindings_source(vhost, name, **config_override):

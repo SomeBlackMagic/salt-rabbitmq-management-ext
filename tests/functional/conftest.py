@@ -1,8 +1,11 @@
 import logging
 import shutil
+from unittest.mock import Mock
 
 import pytest
 from saltfactories.utils.functional import Loaders
+
+from saltext.rabbitmq_management.modules import rabbitmq_management_mod as _rmq_core
 
 log = logging.getLogger(__name__)
 
@@ -148,3 +151,51 @@ def modules(loaders):  # pragma: no cover
 @pytest.fixture(scope="module")
 def states(loaders):  # pragma: no cover
     return loaders.states
+
+
+@pytest.fixture(scope="module")
+def rabbitmq_config():  # pragma: no cover
+    """
+    Default RabbitMQ connection parameters for functional tests.
+
+    Functional tests patch ``salt.utils.http.query``, so these values are
+    never used for real network connections.  They are provided so test
+    functions can pass ``**rabbitmq_config`` to state/module calls in a way
+    that mirrors production usage.
+    """
+    return {
+        "host": "localhost",
+        "port": 15672,
+        "user": "guest",
+        "password": "guest",
+    }
+
+
+_STATIC_CONFIG = {
+    "host": "localhost",
+    "port": 15672,
+    "user": "guest",
+    "password": "guest",
+    "scheme": "http",
+    "timeout": 30,
+}
+
+
+@pytest.fixture
+def mock_http(monkeypatch):  # pragma: no cover
+    """
+    Patch the RabbitMQ core module so functional tests need no live broker.
+
+    ``_get_management_config`` is stubbed out because it depends on
+    ``__salt__``, which Salt's lazy loader does not inject into the private
+    core helper module (``rabbitmq_management_mod``) in the functional-test
+    ``Loaders`` context.
+
+    Returns a ``unittest.mock.Mock`` pre-installed as ``salt.utils.http.query``
+    so each test can configure its own ``return_value`` or ``side_effect``.
+    """
+    monkeypatch.setattr(_rmq_core, "_get_management_config", lambda: dict(_STATIC_CONFIG))
+
+    http_mock = Mock()
+    monkeypatch.setattr("salt.utils.http.query", http_mock)
+    return http_mock

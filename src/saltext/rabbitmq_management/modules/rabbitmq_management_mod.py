@@ -140,7 +140,7 @@ def _http_request(method, path, data=None, **config_override):
             return {"status": "success"}
 
         if status == 404:
-            raise CommandExecutionError(f"RabbitMQ API endpoint not found: {path}")
+            raise CommandExecutionError(f"HTTP 404 Not Found: {path}")
 
         if status >= 400:
             error_msg = result.get("body", result.get("error", "Unknown error"))

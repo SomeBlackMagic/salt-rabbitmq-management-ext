@@ -144,8 +144,11 @@ def user_exist(name, **config_override):
     Returns:
         bool: True if user exists, False otherwise
     """
-    result = user_get(name, **config_override)
-    return result is not None
+    try:
+        result = user_get(name, **config_override)
+        return result is not None
+    except CommandExecutionError:
+        return False
 
 
 def user_set_password(name, password, hashing_algorithm=None, **config_override):

@@ -192,8 +192,11 @@ def queue_exist(vhost, name, **config_override):
     Returns:
         bool: True if queue exists, False otherwise
     """
-    result = queue_get(vhost, name, **config_override)
-    return result is not None
+    try:
+        result = queue_get(vhost, name, **config_override)
+        return result is not None
+    except CommandExecutionError:
+        return False
 
 
 def queue_purge(vhost, name, **config_override):

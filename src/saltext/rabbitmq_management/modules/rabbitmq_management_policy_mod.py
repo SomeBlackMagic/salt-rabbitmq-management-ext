@@ -191,5 +191,8 @@ def policy_exist(vhost, name, **config_override):
     Returns:
         bool: True if policy exists, False otherwise
     """
-    result = policy_get(vhost, name, **config_override)
-    return result is not None
+    try:
+        result = policy_get(vhost, name, **config_override)
+        return result is not None
+    except CommandExecutionError:
+        return False

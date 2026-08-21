@@ -1,0 +1,1 @@
+Fix HTTP 404 error detection in ``_http_request`` (message now includes the status code) and add missing ``CommandExecutionError`` handling in ``user_exist``, ``queue_exist``, ``exchange_exist``, and ``policy_exist`` so they return ``False`` instead of propagating the exception when a resource is not found.

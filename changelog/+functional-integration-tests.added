@@ -1,0 +1,1 @@
+Add functional tests for execution modules and state idempotency (vhost, user, queue, exchange, policy) using mocked HTTP, and integration tests against a live RabbitMQ container via Docker Compose.
