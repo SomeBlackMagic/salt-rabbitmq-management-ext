@@ -1,0 +1,1 @@
+Add idempotent states for managing RabbitMQ queue and exchange bindings.
