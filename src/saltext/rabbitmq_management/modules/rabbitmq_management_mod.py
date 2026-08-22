@@ -25,6 +25,7 @@ from salt.exceptions import CommandExecutionError
 log = logging.getLogger(__name__)
 
 __virtualname__ = "rabbitmq_management"
+__salt__ = {}
 
 
 def __virtual__():

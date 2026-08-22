@@ -103,12 +103,13 @@ def test_vhost_list_includes_default_vhost(salt_call_cli, rabbitmq_service):
 def test_user_create_and_delete(salt_call_cli, rabbitmq_service):
     """Create, verify, and delete a user through the execution module."""
     # Create
+    conn = {k: v for k, v in rabbitmq_service.items() if k != "password"}
     ret = salt_call_cli.run(
         "rabbitmq_management.user_create",
         _USER,
         password="s3cr3t",
         tags="monitoring",
-        **rabbitmq_service,
+        **conn,
     )
     assert ret.returncode == 0
 
