@@ -14,7 +14,7 @@ This project uses [Semantic Versioning](https://semver.org/) - MAJOR.MINOR.PATCH
 
 ### Added
 
-- Add idempotent states for managing RabbitMQ queue and exchange bindings. [#0](https://github.com/SomeBlackMagic/salt-rabbitmq-management-ext/issues/0)
+- Add idempotent states for managing RabbitMQ queue and exchange bindings.
 - Add functional tests for execution modules and state idempotency (vhost, user, queue, exchange, policy) using mocked HTTP, and integration tests against a live RabbitMQ container via Docker Compose.
 - Add idempotent states for creating and removing RabbitMQ exchanges, with conflict detection, force-recreate support, and built-in exchange protection.
 - Add idempotent states for creating, updating, and removing RabbitMQ federation upstreams, with support for all upstream parameters including URI lists, TTL, prefetch count, ack mode, and reconnect delay.
