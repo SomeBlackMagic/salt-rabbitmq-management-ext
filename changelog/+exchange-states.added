@@ -1,1 +1,0 @@
-Add idempotent states for creating and removing RabbitMQ exchanges, with conflict detection, force-recreate support, and built-in exchange protection.

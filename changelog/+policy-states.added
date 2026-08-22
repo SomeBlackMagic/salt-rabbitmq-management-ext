@@ -1,1 +1,0 @@
-Add idempotent states for creating, updating, and removing RabbitMQ policies, with support for pattern, definition (dict or JSON string), priority, and apply-to configuration.

@@ -1,1 +1,0 @@
-Add idempotent states for creating, updating, and removing RabbitMQ runtime parameters, with support for arbitrary component types (federation-upstream, shovel, etc.) and JSON string value normalization.

@@ -1,1 +1,0 @@
-Add idempotent states for creating, updating, and removing RabbitMQ shovels, with support for all shovel parameters including source/destination URIs, queue names, prefetch count, ack mode, reconnect delay, and source delete-after policy.

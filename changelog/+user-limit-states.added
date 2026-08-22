@@ -1,1 +1,0 @@
-Add idempotent states for setting and removing RabbitMQ user limits (max-connections, max-channels) via ``user_limit_present`` and ``user_limit_absent``.

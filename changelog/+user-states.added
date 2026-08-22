@@ -1,1 +1,0 @@
-Add idempotent states for creating, updating, and removing RabbitMQ users, including passwords sourced from Salt SDB.
