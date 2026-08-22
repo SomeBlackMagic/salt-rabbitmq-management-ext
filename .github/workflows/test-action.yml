@@ -121,6 +121,12 @@ jobs:
           NOX_VERSION: '2026.4.10'
           UV_VERSION: '0.11.26'
 
+      - name: Switch Docker to Linux containers
+        shell: pwsh
+        run: |
+          & "$Env:ProgramFiles\Docker\Docker\DockerCli.exe" -SwitchLinuxEngine
+          Start-Sleep -Seconds 10
+
       - name: Install Test Requirements
         shell: bash
         env:
@@ -213,7 +219,7 @@ jobs:
       - name: Install Docker via Colima
         run: |
           brew install colima docker docker-compose
-          colima start --arch aarch64 --vm-type vz
+          colima start --cpu 2 --memory 4
 
       - name: Install Test Requirements
         env:
