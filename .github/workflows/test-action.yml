@@ -210,6 +210,11 @@ jobs:
           NOX_VERSION: '2026.4.10'
           UV_VERSION: '0.11.26'
 
+      - name: Install Docker via Colima
+        run: |
+          brew install colima docker docker-compose
+          colima start --arch aarch64 --vm-type vz
+
       - name: Install Test Requirements
         env:
           SALT_REQUIREMENT: salt==${{ matrix.salt-version }}
