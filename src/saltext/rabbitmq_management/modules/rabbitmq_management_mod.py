@@ -47,9 +47,11 @@ def _get_management_config():
 
     Returns dict with connection parameters.
     """
-    rabbitmq_config = __salt__["config.option"]("rabbitmq", {})
-    management_config = rabbitmq_config.get("management", {})
-    config = management_config.get("config", {})
+    config = {}
+    if "config.option" in __salt__:
+        rabbitmq_config = __salt__["config.option"]("rabbitmq", {})
+        management_config = rabbitmq_config.get("management", {})
+        config = management_config.get("config", {})
 
     return {
         "host": config.get("host", "localhost"),
