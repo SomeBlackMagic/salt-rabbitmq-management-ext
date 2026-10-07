@@ -9,6 +9,10 @@ on:
       - Auto PR Releases
       - Tagged Releases
 
+env:
+  RELEASE_PYPI: true
+  RELEASE_SALT_BUNDLE: true
+
 jobs:
   get_version:
     name: Get package version
@@ -55,6 +59,7 @@ jobs:
   test_release:
     name: Publish Python Package to Test PyPI
     runs-on: ubuntu-24.04
+    if: vars.RELEASE_PYPI != 'false'
     needs:
       - get_version
     permissions:
@@ -81,6 +86,7 @@ jobs:
   pypi_release:
     name: Publish Python Package to PyPI
     runs-on: ubuntu-24.04
+    if: vars.RELEASE_PYPI != 'false'
     needs:
       - test_release
     permissions:
@@ -88,7 +94,7 @@ jobs:
       id-token: write
     environment:
       name: release
-      url: https://pypi.org/p/saltext.rabbitmq-management
+      url: https://pypi.org/p/incus
 
     steps:
       - name: Download Python Package Artifacts
@@ -106,6 +112,28 @@ jobs:
           password: ${{ secrets.PYPI_API_TOKEN }}
           verbose: ${{ runner.debug == '1' }}
 
+  salt_bundle_release:
+    name: Publish to Salt Bundle
+    runs-on: ubuntu-24.04
+    if: vars.RELEASE_SALT_BUNDLE != 'false'
+    needs:
+      - get_version
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Publish via salt-bundle
+        uses: SomeBlackMagic/salt-bundle/.github/actions/salt-bundle-release@master
+        with:
+          index-branch: gh-pages
+          index-dir: repo
+          packages-dir: "."
+          version: ${{ needs.get_version.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   docs_release:
     name: Deploy Docs
     uses: ./.github/workflows/deploy-docs-action.yml
@@ -114,8 +142,7 @@ jobs:
       - get_version
     permissions:
       actions: read
-      pages: write
-      id-token: write
+      contents: write
 
   gh_release:
     name: Create GitHub release

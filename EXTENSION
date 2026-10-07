@@ -1,0 +1,62 @@
+name: someblackmagic/rabbitmq-management-ext
+version: 0.1.0
+description: Salt extension for managing RabbitMQ through the Management HTTP API
+
+# --- Salt compatibility ---
+minimum_version: "3006"
+maximum_version: ~
+
+python_requires:
+  - ">=3.10"
+
+dependencies:
+  - "salt>=3006"
+
+conflicts: []
+
+maintainers:
+  - name: SomeBlackMagic
+    email: dev@someblackmagic.com
+    github: SomeBlackMagic
+
+authors:
+  - name: Andrii Chornyi
+    email: wiroatom@gmail.com
+
+license: Apache-2.0
+
+website: https://SomeBlackMagic.github.io/salt-rabbitmq-management-ext/
+source: https://github.com/SomeBlackMagic/salt-rabbitmq-management-ext
+issues: https://github.com/SomeBlackMagic/salt-rabbitmq-management-ext/issues
+
+summary: |
+  Provides Salt execution and state modules for managing RabbitMQ resources
+  through the RabbitMQ Management HTTP API. No RabbitMQ CLI tools are required
+  on the target host.
+
+  Execution modules:
+    - rabbitmq_management_mod          — shared Management API HTTP client
+    - rabbitmq_management_overview_mod — API connectivity diagnostics
+    - rabbitmq_management_vhost_mod    — virtual hosts
+    - rabbitmq_management_user_mod     — users and their permissions
+    - rabbitmq_management_permission_mod — virtual-host and topic permissions
+    - rabbitmq_management_queue_mod    — queues and messages
+    - rabbitmq_management_exchange_mod — exchanges and publishing
+    - rabbitmq_management_binding_mod  — queue and exchange bindings
+    - rabbitmq_management_policy_mod   — policies
+    - rabbitmq_management_parameter_mod — runtime parameters
+    - rabbitmq_management_federation_mod — federation upstreams
+    - rabbitmq_management_shovel_mod   — shovels
+    - rabbitmq_management_limit_mod    — user and virtual-host limits
+
+  State modules:
+    - rabbitmq_management_vhost_mod      — virtual hosts and virtual-host limits
+    - rabbitmq_management_user_mod       — users and user limits
+    - rabbitmq_management_permission_mod — virtual-host permissions
+    - rabbitmq_management_queue_mod      — queues
+    - rabbitmq_management_exchange_mod   — exchanges
+    - rabbitmq_management_binding_mod    — queue and exchange bindings
+    - rabbitmq_management_policy_mod     — policies
+    - rabbitmq_management_parameter_mod  — runtime parameters
+    - rabbitmq_management_federation_mod — federation upstreams
+    - rabbitmq_management_shovel_mod     — shovels
